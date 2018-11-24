@@ -25,91 +25,49 @@ public:
    }
    Unsigned256(Unsigned256&& src) = default;
 
-   Unsigned256& operator=(const Unsigned256& src) {
-      for (int i = 0; i < el_count_; i++)
-         vals_[i] = src.vals_[i];
+   Unsigned256& operator=(const Unsigned256& src);
 
-      return *this;
-   }
-   Unsigned256& operator*=(const Unsigned256& src) {
-      for (int i = 0; i < el_count_; i++)
-	 vals_[i] *= src.vals_[i];
+   Unsigned256& operator*=(const Unsigned256& src);
+  
+   Unsigned256& operator/=(const Unsigned256& src);
+  
+   Unsigned256& operator+=(const Unsigned256& src);
 
-      return *this;
-   }
-   Unsigned256& operator/=(const Unsigned256& src) {
-      for (int i = 0; i < el_count_; i++)
-         vals_[i] /= src.vals_[i];
+   Unsigned256& operator-=(const Unsigned256& src);
 
-      return *this;
-   }
-   Unsigned256& operator+=(const Unsigned256& src) {
-      for (int i = 0; i < el_count_; i++)
-	 vals_[i] += src.vals_[i];
+   Unsigned256 operator*(const Unsigned256& src) const;
 
-      return *this;
-   }
-   Unsigned256& operator-=(const Unsigned256& src) {
-      for (int i = 0; i < el_count_; i++)
-	 vals_[i] -= src.vals_[i];
+   Unsigned256 operator+(const Unsigned256& src) const;
 
-      return *this;
-   }
-   Unsigned256 operator*(const Unsigned256& src) const {
-      return Unsigned256(*this)*=src; 
-   }
-   Unsigned256 operator+(const Unsigned256& src) const {
-      return Unsigned256(*this)+=src;
-   }
-   Unsigned256 operator-(const Unsigned256& src) const {
-      return Unsigned256(*this)-=src;
-   }
-   Unsigned256 operator/(const Unsigned256& src) const {
-      return Unsigned256(*this)/=src;
-   }
+   Unsigned256 operator-(const Unsigned256& src) const;
+  
+   Unsigned256 operator/(const Unsigned256& src) const;
+
    template <typename T>
-      Unsigned256 operator*(const T& src) const {
-      return Unsigned256(*this)*=src;
-   }
+      Unsigned256 operator*(const T& src) const;
+
    template <typename T>
-      Unsigned256 operator/(const T& src) const {
-      return Unsigned256(*this)/=src;
-   }
+      Unsigned256 operator/(const T& src) const;
+
    template <typename T>
-      Unsigned256 operator+(const T& src) const {
-      return Unsigned256(*this)+=src;
-   }
+      Unsigned256 operator+(const T& src) const;
+
    template <typename T>
-      Unsigned256 operator-(const T& src) const {
-      return Unsigned256(*this)-=src;
-   }
-   Unsigned256 operator%(const Unsigned256& src) const {
-      return Unsigned256(0);
-   }
-   bool operator>(const Unsigned256& src) const {
-      return true;
-   }
-   bool operator<(const Unsigned256& ) const {
-      return true;
-   }
-   bool operator>=(const Unsigned256& ) const {
-      return true;
-   }
-   bool operator<=(const Unsigned256& ) const {
-      return true;
-   }
-   bool operator==(const Unsigned256& other) const {
-      for (int i = 0; i < el_count_; i++)
-      {
-         if (vals_[i] != other.vals_[i])
-	   return false;
-      } 
-      return true;
-   }
-   bool operator!=(const Unsigned256& ) const {
-      
-      return true;
-   }
+      Unsigned256 operator-(const T& src) const;
+
+   Unsigned256 operator%(const Unsigned256& src) const;
+
+   bool operator>(const Unsigned256& src) const;
+
+   bool operator<(const Unsigned256& ) const;
+
+   bool operator>=(const Unsigned256& ) const;
+
+   bool operator<=(const Unsigned256& ) const;
+
+   bool operator==(const Unsigned256& other) const;
+
+   bool operator!=(const Unsigned256& ) const;
 
    friend std::ostream & operator << (std::ostream &out, const Unsigned256& );
    static const Unsigned256& max_val();
@@ -152,11 +110,206 @@ T max_limits(std::true_type is_integral) {
   return std::numeric_limits<T>::max();
 }
 
-
 template <typename T> constexpr
 T max_limits() {
   return max_limits<T>(std::is_integral<T>());
 }
+
+
+template <typename T1, typename T2> inline constexpr
+   ERR_t MultiOverUnderflow(const T1& a, const T2& b, std::true_type T1_is_signed, std::true_type T2_is_signed) {
+      ERR_t err = None;
+      auto max_lim = max_limits<T1>() > max_limits<T2>() ? max_limits<T1>() : max_limits<T2>(); 
+
+      auto min_lim = min_limits<T1>() < min_limits<T2>() ? min_limits<T1>() : min_limits<T2>();
+
+      if (a > max_lim / b)
+         err |= Overflow;
+      if (a < min_lim / b)
+         err |= Underflow;
+      return err;
+ }
+
+
+template <typename T1, typename T2> inline constexpr
+   ERR_t MultiOverUnderflow(const T1& a, const T2& b, std::true_type T1_is_signed, std::false_type T2_is_signed) {
+      ERR_t err = None;
+      auto max_lim = max_limits<T1>() > max_limits<T2>() ? max_limits<T1>() : max_limits<T2>();
+      auto min_lim = min_limits<T1>();
+
+      if (a > max_lim / b)
+	 err |= Overflow;
+      if (a < min_lim / b)
+	 err |= Underflow;
+
+      return err;
+ }
+
+template <typename T1, typename T2> inline constexpr
+   ERR_t MultiOverUnderflow(const T1& a, const T2& b, std::false_type T1_is_signed, std::true_type T2_is_signed) {
+
+      ERR_t err = None;
+      auto max_lim = max_limits<T1>() > max_limits<T2>() ? max_limits<T1>() : max_limits<T2>();
+      auto min_lim = min_limits<T2>();
+
+      if (a > max_lim / b)
+	 err |= Overflow;
+      if (a < min_lim / b)
+	 err |= Underflow;
+
+      return err;
+ 
+ }
+
+
+template <typename T1, typename T2> inline constexpr
+   ERR_t MultiOverUnderflow(const T1& a, const T2& b, std::false_type T1_is_signed, std::false_type T2_is_signed) {
+      ERR_t err = None;
+      auto max_lim = max_limits<T1>() > max_limits<T2>() ? max_limits<T1>() : max_limits<T2>(); 
+
+      if (a > max_lim / b)
+         err |= Overflow;
+      return err;
+ }
+
+template <typename T1, typename T2> inline constexpr
+   ERR_t MultiOverUnderflow(const T1& a, const T2& b) {
+    return MultiOverUnderflow(a, b, std::is_signed<T1>(), std::is_signed<T2>());
+
+ }
+
+
+template <typename T1, typename T2> inline constexpr
+   ERR_t AddOverUnderflow(const T1& a, const T2& b) {
+      ERR_t err = None;
+      auto max_lim = max_limits<T1>() > max_limits<T2>() ? max_limits<T1>() : max_limits<T2>();
+      auto min_lim = min_limits<T1>() < min_limits<T2>() ? min_limits<T1>() : min_limits<T2>();
+
+      if (a > max_lim - b)
+	 err |= Overflow;
+      if (a < min_lim - b)
+	 err |= Underflow;
+      return err;
+}
+
+
+Unsigned256& Unsigned256::operator=(const Unsigned256& src) {
+   for (int i = 0; i < el_count_; i++)
+       vals_[i] = src.vals_[i];
+
+   return *this;
+}
+
+Unsigned256& Unsigned256::operator*=(const Unsigned256& src) {
+   bool val0_overflow=false;
+   ERR_t res0 = MultiOverUnderflow(vals_[0], src.vals_[0]);
+   if (res0 & Overflow) 
+     val0_overflow=true;
+   vals_[0] ^= src.vals_[0];
+   bool val1_overflow=false;
+   ERR_t res1;
+   res1 = MultiOverUnderflow(vals_[1], src.vals_[1]);
+   if (res1 & Overflow)
+      val1_overflow=true;
+   else {
+      //auto sum1 = vals
+   }
+   //TO DO: finish
+
+   return *this;
+}
+
+Unsigned256& Unsigned256::operator/=(const Unsigned256& src) {
+    for (int i = 0; i < el_count_; i++)
+       vals_[i] /= src.vals_[i];
+
+    return *this;
+}
+
+Unsigned256& Unsigned256::operator+=(const Unsigned256& src) {
+    for (int i = 0; i < el_count_; i++)
+       vals_[i] += src.vals_[i];
+
+    return *this;
+}
+
+Unsigned256& Unsigned256::operator-=(const Unsigned256& src) {
+    for (int i = 0; i < el_count_; i++)
+       vals_[i] -= src.vals_[i];
+
+    return *this;
+}
+
+Unsigned256 Unsigned256::operator*(const Unsigned256& src) const {
+    return Unsigned256(*this)*=src; 
+}
+
+Unsigned256 Unsigned256::operator+(const Unsigned256& src) const {
+    return Unsigned256(*this)+=src;
+}
+
+Unsigned256 Unsigned256::operator-(const Unsigned256& src) const {
+    return Unsigned256(*this)-=src;
+}
+
+Unsigned256 Unsigned256::operator/(const Unsigned256& src) const {
+    return Unsigned256(*this)/=src;
+}
+
+template <typename T>
+Unsigned256 Unsigned256::operator*(const T& src) const {
+    return Unsigned256(*this)*=src;
+}
+
+template <typename T>
+Unsigned256 Unsigned256::operator/(const T& src) const {
+    return Unsigned256(*this)/=src;
+}
+
+template <typename T>
+Unsigned256 Unsigned256::operator+(const T& src) const {
+    return Unsigned256(*this)+=src;
+}
+
+template <typename T>
+Unsigned256 Unsigned256::operator-(const T& src) const {
+    return Unsigned256(*this)-=src;
+}
+
+Unsigned256 Unsigned256::operator%(const Unsigned256& src) const {
+    return Unsigned256(0);
+}
+
+bool Unsigned256::operator>(const Unsigned256& src) const {
+    return true;
+}
+
+bool Unsigned256::operator<(const Unsigned256& ) const {
+    return true;
+}
+
+bool Unsigned256::operator>=(const Unsigned256& ) const {
+    return true;
+}
+
+bool Unsigned256::operator<=(const Unsigned256& ) const {
+    return true;
+}
+
+bool Unsigned256::operator==(const Unsigned256& other) const {
+    for (int i = 0; i < el_count_; i++)
+    {
+       if (vals_[i] != other.vals_[i])
+	 return false;
+    } 
+    return true;
+}
+
+bool Unsigned256::operator!=(const Unsigned256& ) const {
+      
+   return true;
+}
+
 
 class Fraction {
 
@@ -216,14 +369,10 @@ private:
       SGN_t Sgn(const T x, std::true_type is_signed) const;
    template <typename T> constexpr
       SGN_t Sgn(const T x) const;
-   template <typename T1, typename T2> constexpr 
-      ERR_t CheckForOverUnderflow(const T1& a, const T2& b) const;
    VAL_t num_, denom_;
    SGN_t sgn_;
    ERR_t err_;
 };
-
-
 
 template <typename T> inline constexpr
   SGN_t Fraction::Sgn(const T x, std::false_type is_signed) const {
@@ -239,24 +388,6 @@ template <typename T> inline constexpr
    SGN_t Fraction::Sgn(const T x) const {
       return Sgn(x, std::is_signed<T>());
 }
-
-
-template <typename T1, typename T2> inline constexpr
-   ERR_t Fraction::CheckForOverUnderflow(const T1& a, const T2& b) const {
-      ERR_t err = None;
-      auto max_lim = max_limits<T1>() > max_limits<T2>() ? max_limits<T1>() : max_limits<T2>(); 
-             // std::numeric_limits<T1>::max() > std::numeric_limits<T2>::max() ?
-             //             std::numeric_limits<T1>::max() : std::numeric_limits<T2>::max(); 
-
-      auto min_lim = min_limits<T1>() < min_limits<T2>() ? min_limits<T1>() : min_limits<T2>();
-             // std::numeric_limits<T1>::min() < std::numeric_limits<T2>::min() ?
-             //             std::numeric_limits<T1>::min() : std::numeric_limits<T2>::min(); 
-      if (a > max_lim / b)
-         err |= Overflow;
-      if (a < min_lim / b)
-         err |= Underflow;
-      return err;
-   }
 
 constexpr Fraction::Fraction(const VAL_t& num, const VAL_t& denom, const SGN_t sgn, const ERR_t err) : 
      num_(num), denom_(denom), sgn_(sgn), err_(err)
@@ -334,7 +465,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
    {
       auto fact = other.num_ / denom_;
       if (num_prod != VAL_t(0)) {
-          auto res = CheckForOverUnderflow(num_prod, fact);
+          auto res = MultiOverUnderflow(num_prod, fact);
           if (res & Overflow) {
               num_prod = std::numeric_limits<VAL_t>::max();
               denom_prod = denom_; 
@@ -344,7 +475,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
               denom_prod = VAL_t(1);
           }
       } else {
-          auto res = CheckForOverUnderflow(num_, fact);
+          auto res = MultiOverUnderflow(num_, fact);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -360,7 +491,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
    {
       if (num_prod != VAL_t(0))
       {
-          auto res = CheckForOverUnderflow(num_prod, other.num_);
+          auto res = MultiOverUnderflow(num_prod, other.num_);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -385,7 +516,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
       {
          auto fact = denom_ / other.num_;
          if (denom_prod != VAL_t(0)) {
-             auto res = CheckForOverUnderflow(denom_prod, fact);
+             auto res = MultiOverUnderflow(denom_prod, fact);
              if (res & Overflow) {
                  denom_prod = std::numeric_limits<VAL_t>::max();
                  num_prod = num_; 
@@ -395,7 +526,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
                  num_prod = VAL_t(1);
              }
          } else {
-             auto res = CheckForOverUnderflow(other.denom_, fact);
+             auto res = MultiOverUnderflow(other.denom_, fact);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -410,7 +541,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
       {
          if (denom_prod != VAL_t(0))
          {
-             auto res = CheckForOverUnderflow(denom_prod, other.denom_);
+             auto res = MultiOverUnderflow(denom_prod, other.denom_);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -433,12 +564,12 @@ Fraction& Fraction::operator*=(const Fraction& other) {
    }
 
    if (num_prod == VAL_t(0) && denom_prod == VAL_t(0)) {
-      auto n_res = CheckForOverUnderflow(num_, other.num_); 
+      auto n_res = MultiOverUnderflow(num_, other.num_); 
       if (n_res & Overflow) { 
          num_ = std::numeric_limits<VAL_t>::max();
          err_ |= Overflow;
       }
-      auto d_res = CheckForOverUnderflow(denom_, other.denom_);
+      auto d_res = MultiOverUnderflow(denom_, other.denom_);
       if (d_res & Overflow) {
          denom_ = std::numeric_limits<VAL_t>::max();
          err_ |= Overflow;
@@ -477,7 +608,7 @@ template <typename T> constexpr
       return *this;
    }
    VAL_t num_prod = num_ * v;
-   auto res = CheckForOverUnderflow(num_, v);
+   auto res = MultiOverUnderflow(num_, v);
    if (res & Overflow) {
       num_ = std::numeric_limits<VAL_t>::max(); 
       return *this;
@@ -503,7 +634,7 @@ template <typename T> constexpr
    sgn_ *= Sgn(v);
    auto abs_v = std::abs(v);
    VAL_t num_prod = num_ * abs_v;;
-   auto res = CheckForOverUnderflow(num_, abs_v);
+   auto res = MultiOverUnderflow(num_, abs_v);
    if (res & Overflow) {
       num_ = std::numeric_limits<VAL_t>::max(); 
       return *this;
@@ -561,7 +692,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
    {
       auto fact = other.num_ / denom_;
       if (num_prod != VAL_t(0)) {
-          auto res = CheckForOverUnderflow(num_prod, fact);
+          auto res = MultiOverUnderflow(num_prod, fact);
           if (res & Overflow) {
               num_prod = std::numeric_limits<VAL_t>::max();
               denom_prod = denom_; 
@@ -571,7 +702,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
               denom_prod = VAL_t(1);
           }
       } else {
-          auto res = CheckForOverUnderflow(num_, fact);
+          auto res = MultiOverUnderflow(num_, fact);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -587,7 +718,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
    {
       if (num_prod != VAL_t(0))
       {
-          auto res = CheckForOverUnderflow(num_prod, other.num_);
+          auto res = MultiOverUnderflow(num_prod, other.num_);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -612,7 +743,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
       {
          auto fact = denom_ / other.num_;
          if (denom_prod != VAL_t(0)) {
-             auto res = CheckForOverUnderflow(denom_prod, fact);
+             auto res = MultiOverUnderflow(denom_prod, fact);
              if (res & Overflow) {
                  denom_prod = std::numeric_limits<VAL_t>::max();
                  num_prod = num_; 
@@ -622,7 +753,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
                  num_prod = VAL_t(1);
              }
          } else {
-             auto res = CheckForOverUnderflow(other.denom_, fact);
+             auto res = MultiOverUnderflow(other.denom_, fact);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -637,7 +768,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
       {
          if (denom_prod != VAL_t(0))
          {
-             auto res = CheckForOverUnderflow(denom_prod, other.denom_);
+             auto res = MultiOverUnderflow(denom_prod, other.denom_);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -658,8 +789,8 @@ const Fraction Fraction::operator*(const Fraction& other) const {
    }
 
    err = Overflow;
-   auto n_res = CheckForOverUnderflow(num_, other.num_);
-   auto d_res = CheckForOverUnderflow(denom_, other.denom_);
+   auto n_res = MultiOverUnderflow(num_, other.num_);
+   auto d_res = MultiOverUnderflow(denom_, other.denom_);
    if (n_res & Overflow) {
       num_prod = std::numeric_limits<VAL_t>::max();
       denom_prod = denom_;
@@ -684,7 +815,7 @@ template <typename T> constexpr
    VAL_t num_prod = std::numeric_limits<VAL_t>::max();
    ERR_t err = None;
   
-   auto n_res = CheckForOverUnderflow(num_, v);
+   auto n_res = MultiOverUnderflow(num_, v);
    if (n_res & Overflow) { 
        err = Overflow;
    }
@@ -702,7 +833,7 @@ template <typename T> constexpr
    ERR_t err = None;
   
    auto abs_v = std::abs(v);
-   auto n_res = CheckForOverUnderflow(num_, abs_v);
+   auto n_res = MultiOverUnderflow(num_, abs_v);
    if (n_res & Overflow) { 
        err = Overflow;
    }
