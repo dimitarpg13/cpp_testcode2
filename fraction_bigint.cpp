@@ -17,7 +17,6 @@ typedef unsigned long long PRIM_t;
 class Unsigned256 {
 public:
    constexpr Unsigned256(PRIM_t iv=0) : vals_{iv, 0, 0, 0} {
-
    }
 
    constexpr Unsigned256(PRIM_t v1, PRIM_t v2, PRIM_t v3, PRIM_t v4) : vals_{v1, v2, v3, v4} {}
@@ -118,7 +117,7 @@ public:
 private:
    static const Unsigned256 max_val_;
    static const Unsigned256 min_val_;
-   static constexpr const int el_count_ = 4;
+   static constexpr int el_count_ = 4;
    PRIM_t vals_[el_count_];
 };
 
@@ -129,8 +128,18 @@ typedef unsigned long long VAL_t;
 typedef int ERR_t;
 
 template <typename T>
+T min_limits(std::false_type is_integral) {
+  return T::min_val();
+}
+
+template <typename T>
+T min_limits(std::true_type is_integral) {
+  return std::numeric_limits<T>::min();
+}
+
+template <typename T>
 T min_limits() {
-  return T(0);
+  return min_limits<T>(std::is_integral<T>());
 }
 
 template <typename T>
