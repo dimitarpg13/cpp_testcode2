@@ -72,7 +72,7 @@ private:
    template <typename T> constexpr
       SGN_t Sgn(const T x) const;
    template <typename T1, typename T2> constexpr
-      ERR_t CheckForOverflow(const T1& a, const T2& b) const;
+      ERR_t MultiOverflow(const T1& a, const T2& b) const;
    VAL_t num_, denom_;
    SGN_t sgn_;
    ERR_t err_;
@@ -97,7 +97,7 @@ template <typename T> inline constexpr
 
 
 template <typename T1, typename T2> inline constexpr
-   ERR_t Fraction::CheckForOverflow(const T1& a, const T2& b) const {
+   ERR_t Fraction::MultiOverflow(const T1& a, const T2& b) const {
       ERR_t err = None;
       constexpr auto max_limit = 
              std::numeric_limits<T1>::max() > std::numeric_limits<T2>::max() ?
@@ -109,6 +109,7 @@ template <typename T1, typename T2> inline constexpr
 	 err |= Overflow;
       return err;
    }
+
 
 constexpr Fraction::Fraction(const VAL_t num, const VAL_t denom, const SGN_t sgn, const ERR_t err) : 
      num_(num), denom_(denom), sgn_(sgn), err_(err)
@@ -184,7 +185,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
    {
       auto fact = other.num_ / denom_;
       if (num_prod != VAL_t(0)) {
-          auto res = CheckForOverflow(num_prod, fact);
+          auto res = MultiOverflow(num_prod, fact);
           if (res & Overflow) {
               num_prod = std::numeric_limits<VAL_t>::max();
               denom_prod = denom_; 
@@ -194,7 +195,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
               denom_prod = VAL_t(1);
           }
       } else {
-          auto res = CheckForOverflow(num_, fact);
+          auto res = MultiOverflow(num_, fact);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -210,7 +211,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
    {
       if (num_prod != VAL_t(0))
       {
-          auto res = CheckForOverflow(num_prod, other.num_);
+          auto res = MultiOverflow(num_prod, other.num_);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -235,7 +236,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
       {
          auto fact = denom_ / other.num_;
          if (denom_prod != VAL_t(0)) {
-             auto res = CheckForOverflow(denom_prod, fact);
+             auto res = MultiOverflow(denom_prod, fact);
              if (res & Overflow) {
                  denom_prod = std::numeric_limits<VAL_t>::max();
                  num_prod = num_; 
@@ -245,7 +246,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
                  num_prod = VAL_t(1);
              }
          } else {
-             auto res = CheckForOverflow(other.denom_, fact);
+             auto res = MultiOverflow(other.denom_, fact);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -260,7 +261,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
       {
          if (denom_prod != VAL_t(0))
          {
-             auto res = CheckForOverflow(denom_prod, other.denom_);
+             auto res = MultiOverflow(denom_prod, other.denom_);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -283,12 +284,12 @@ Fraction& Fraction::operator*=(const Fraction& other) {
    }
 
    if (num_prod == VAL_t(0) && denom_prod == VAL_t(0)) {
-      auto n_res = CheckForOverflow(num_, other.num_); 
+      auto n_res = MultiOverflow(num_, other.num_); 
       if (n_res & Overflow) { 
          num_ = std::numeric_limits<VAL_t>::max();
          err_ |= Overflow;
       }
-      auto d_res = CheckForOverflow(denom_, other.denom_);
+      auto d_res = MultiOverflow(denom_, other.denom_);
       if (d_res & Overflow) {
          denom_ = std::numeric_limits<VAL_t>::max();
          err_ |= Overflow;
@@ -327,7 +328,7 @@ template <typename T> constexpr
       return *this;
    }
    VAL_t num_prod = num_ * v;
-   auto res = CheckForOverflow(num_, v);
+   auto res = MultiOverflow(num_, v);
    if (res & Overflow) {
       num_ = std::numeric_limits<VAL_t>::max(); 
       return *this;
@@ -353,7 +354,7 @@ template <typename T> constexpr
    sgn_ *= Sgn(v);
    auto abs_v = std::abs(v);
    VAL_t num_prod = num_ * abs_v;;
-   auto res = CheckForOverflow(num_, abs_v);
+   auto res = MultiOverflow(num_, abs_v);
    if (res & Overflow) {
       num_ = std::numeric_limits<VAL_t>::max(); 
       return *this;
@@ -409,7 +410,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
    {
       auto fact = other.num_ / denom_;
       if (num_prod != VAL_t(0)) {
-          auto res = CheckForOverflow(num_prod, fact);
+          auto res = MultiOverflow(num_prod, fact);
           if (res & Overflow) {
               num_prod = std::numeric_limits<VAL_t>::max();
               denom_prod = denom_; 
@@ -419,7 +420,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
               denom_prod = VAL_t(1);
           }
       } else {
-          auto res = CheckForOverflow(num_, fact);
+          auto res = MultiOverflow(num_, fact);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -435,7 +436,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
    {
       if (num_prod != VAL_t(0))
       {
-          auto res = CheckForOverflow(num_prod, other.num_);
+          auto res = MultiOverflow(num_prod, other.num_);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -460,7 +461,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
       {
          auto fact = denom_ / other.num_;
          if (denom_prod != VAL_t(0)) {
-             auto res = CheckForOverflow(denom_prod, fact);
+             auto res = MultiOverflow(denom_prod, fact);
              if (res & Overflow) {
                  denom_prod = std::numeric_limits<VAL_t>::max();
                  num_prod = num_; 
@@ -470,7 +471,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
                  num_prod = VAL_t(1);
              }
          } else {
-             auto res = CheckForOverflow(other.denom_, fact);
+             auto res = MultiOverflow(other.denom_, fact);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -485,7 +486,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
       {
          if (denom_prod != VAL_t(0))
          {
-             auto res = CheckForOverflow(denom_prod, other.denom_);
+             auto res = MultiOverflow(denom_prod, other.denom_);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -506,8 +507,8 @@ const Fraction Fraction::operator*(const Fraction& other) const {
    }
 
    err = Overflow;
-   auto n_res = CheckForOverflow(num_, other.num_);
-   auto d_res = CheckForOverflow(denom_, other.denom_);
+   auto n_res = MultiOverflow(num_, other.num_);
+   auto d_res = MultiOverflow(denom_, other.denom_);
    if (n_res & Overflow) {
       num_prod = std::numeric_limits<VAL_t>::max();
       denom_prod = denom_;
@@ -532,7 +533,7 @@ template <typename T> constexpr
    VAL_t num_prod = std::numeric_limits<VAL_t>::max();
    ERR_t err = None;
   
-   auto n_res = CheckForOverflow(num_, v);
+   auto n_res = MultiOverflow(num_, v);
    if (n_res & Overflow) { 
        err = Overflow;
    }
@@ -550,7 +551,7 @@ template <typename T> constexpr
    ERR_t err = None;
   
    auto abs_v = std::abs(v);
-   auto n_res = CheckForOverflow(num_, abs_v);
+   auto n_res = MultiOverflow(num_, abs_v);
    if (n_res & Overflow) { 
        err = Overflow;
    }
