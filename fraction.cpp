@@ -330,7 +330,7 @@ template <typename T> constexpr
    if (v == T(0)) {
       num_ = VAL_t(0);
       denom_ = VAL_t(1);
-      sgn_ = VAL_t(0);
+      sgn_ = SGN_t(0);
       return *this;
    }
    VAL_t num_prod = num_ * v;
