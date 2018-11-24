@@ -6,9 +6,8 @@
 enum ErrorCondition {
   None=0,
   Overflow=1,
-  Underflow=2,
-  NaN=4,
-  Inf=8
+  NaN=2,
+  Inf=4
 };
 
 typedef unsigned long long VAL_t;
@@ -48,7 +47,6 @@ public:
    bool IsPositive() { return sgn_ > SGN_t(0); };
    SGN_t Sign() { return sgn_; };
    bool IsOverflow() { return sgn_ & Overflow; };
-   bool IsUnderflow() { return sgn_ & Underflow; };
    bool IsNaN() { return sgn_ & NaN; };
    bool IsInf() { return sgn_ & Inf; };
 
@@ -74,7 +72,7 @@ private:
    template <typename T> constexpr
       SGN_t Sgn(const T x) const;
    template <typename T1, typename T2> constexpr
-      ERR_t CheckForOverUnderflow(const T1& a, const T2& b) const;
+      ERR_t CheckForOverflow(const T1& a, const T2& b) const;
    VAL_t num_, denom_;
    SGN_t sgn_;
    ERR_t err_;
@@ -99,19 +97,16 @@ template <typename T> inline constexpr
 
 
 template <typename T1, typename T2> inline constexpr
-   ERR_t Fraction::CheckForOverUnderflow(const T1& a, const T2& b) const {
+   ERR_t Fraction::CheckForOverflow(const T1& a, const T2& b) const {
       ERR_t err = None;
       constexpr auto max_limit = 
              std::numeric_limits<T1>::max() > std::numeric_limits<T2>::max() ?
                           std::numeric_limits<T1>::max() : std::numeric_limits<T2>::max(); 
 
-      constexpr auto min_limit = 
-             std::numeric_limits<T1>::min() < std::numeric_limits<T2>::min() ?
-                          std::numeric_limits<T1>::min() : std::numeric_limits<T2>::min(); 
       if (a > max_limit / b)
          err |= Overflow;
-      if (a < min_limit / b)
-         err |= Underflow;
+      else if (b > max_limit / a)
+	 err |= Overflow;
       return err;
    }
 
@@ -162,8 +157,6 @@ Fraction& Fraction::operator*=(const Fraction& other) {
       err_ |= other.err_;
       if ( err_ & Overflow )
          num_ = std::numeric_limits<VAL_t>::max();
-      if ( err_ & Underflow )
-         num_ = std::numeric_limits<VAL_t>::min();
       if ( err_ & Inf ) {
          num_ = VAL_t(1);
          denom_ = VAL_t(0);
@@ -191,7 +184,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
    {
       auto fact = other.num_ / denom_;
       if (num_prod != VAL_t(0)) {
-          auto res = CheckForOverUnderflow(num_prod, fact);
+          auto res = CheckForOverflow(num_prod, fact);
           if (res & Overflow) {
               num_prod = std::numeric_limits<VAL_t>::max();
               denom_prod = denom_; 
@@ -201,7 +194,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
               denom_prod = VAL_t(1);
           }
       } else {
-          auto res = CheckForOverUnderflow(num_, fact);
+          auto res = CheckForOverflow(num_, fact);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -217,7 +210,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
    {
       if (num_prod != VAL_t(0))
       {
-          auto res = CheckForOverUnderflow(num_prod, other.num_);
+          auto res = CheckForOverflow(num_prod, other.num_);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -242,7 +235,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
       {
          auto fact = denom_ / other.num_;
          if (denom_prod != VAL_t(0)) {
-             auto res = CheckForOverUnderflow(denom_prod, fact);
+             auto res = CheckForOverflow(denom_prod, fact);
              if (res & Overflow) {
                  denom_prod = std::numeric_limits<VAL_t>::max();
                  num_prod = num_; 
@@ -252,7 +245,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
                  num_prod = VAL_t(1);
              }
          } else {
-             auto res = CheckForOverUnderflow(other.denom_, fact);
+             auto res = CheckForOverflow(other.denom_, fact);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -267,7 +260,7 @@ Fraction& Fraction::operator*=(const Fraction& other) {
       {
          if (denom_prod != VAL_t(0))
          {
-             auto res = CheckForOverUnderflow(denom_prod, other.denom_);
+             auto res = CheckForOverflow(denom_prod, other.denom_);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -290,12 +283,12 @@ Fraction& Fraction::operator*=(const Fraction& other) {
    }
 
    if (num_prod == VAL_t(0) && denom_prod == VAL_t(0)) {
-      auto n_res = CheckForOverUnderflow(num_, other.num_); 
+      auto n_res = CheckForOverflow(num_, other.num_); 
       if (n_res & Overflow) { 
          num_ = std::numeric_limits<VAL_t>::max();
          err_ |= Overflow;
       }
-      auto d_res = CheckForOverUnderflow(denom_, other.denom_);
+      auto d_res = CheckForOverflow(denom_, other.denom_);
       if (d_res & Overflow) {
          denom_ = std::numeric_limits<VAL_t>::max();
          err_ |= Overflow;
@@ -334,7 +327,7 @@ template <typename T> constexpr
       return *this;
    }
    VAL_t num_prod = num_ * v;
-   auto res = CheckForOverUnderflow(num_, v);
+   auto res = CheckForOverflow(num_, v);
    if (res & Overflow) {
       num_ = std::numeric_limits<VAL_t>::max(); 
       return *this;
@@ -360,7 +353,7 @@ template <typename T> constexpr
    sgn_ *= Sgn(v);
    auto abs_v = std::abs(v);
    VAL_t num_prod = num_ * abs_v;;
-   auto res = CheckForOverUnderflow(num_, abs_v);
+   auto res = CheckForOverflow(num_, abs_v);
    if (res & Overflow) {
       num_ = std::numeric_limits<VAL_t>::max(); 
       return *this;
@@ -391,8 +384,6 @@ const Fraction Fraction::operator*(const Fraction& other) const {
       err |= err_;
       if ( err & Overflow )
          num_prod = std::numeric_limits<VAL_t>::max();
-      if ( err & Underflow )
-         num_prod = std::numeric_limits<VAL_t>::min();
       if ( err & Inf ) {
          num_prod = VAL_t(1);
          denom_prod = VAL_t(0);
@@ -418,7 +409,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
    {
       auto fact = other.num_ / denom_;
       if (num_prod != VAL_t(0)) {
-          auto res = CheckForOverUnderflow(num_prod, fact);
+          auto res = CheckForOverflow(num_prod, fact);
           if (res & Overflow) {
               num_prod = std::numeric_limits<VAL_t>::max();
               denom_prod = denom_; 
@@ -428,7 +419,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
               denom_prod = VAL_t(1);
           }
       } else {
-          auto res = CheckForOverUnderflow(num_, fact);
+          auto res = CheckForOverflow(num_, fact);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -444,7 +435,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
    {
       if (num_prod != VAL_t(0))
       {
-          auto res = CheckForOverUnderflow(num_prod, other.num_);
+          auto res = CheckForOverflow(num_prod, other.num_);
           if (res & Overflow) {
              num_prod = std::numeric_limits<VAL_t>::max();
              denom_prod = denom_;
@@ -469,7 +460,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
       {
          auto fact = denom_ / other.num_;
          if (denom_prod != VAL_t(0)) {
-             auto res = CheckForOverUnderflow(denom_prod, fact);
+             auto res = CheckForOverflow(denom_prod, fact);
              if (res & Overflow) {
                  denom_prod = std::numeric_limits<VAL_t>::max();
                  num_prod = num_; 
@@ -479,7 +470,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
                  num_prod = VAL_t(1);
              }
          } else {
-             auto res = CheckForOverUnderflow(other.denom_, fact);
+             auto res = CheckForOverflow(other.denom_, fact);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -494,7 +485,7 @@ const Fraction Fraction::operator*(const Fraction& other) const {
       {
          if (denom_prod != VAL_t(0))
          {
-             auto res = CheckForOverUnderflow(denom_prod, other.denom_);
+             auto res = CheckForOverflow(denom_prod, other.denom_);
              if (res & Overflow) {
                 denom_prod = std::numeric_limits<VAL_t>::max();
                 num_prod = num_;
@@ -515,8 +506,8 @@ const Fraction Fraction::operator*(const Fraction& other) const {
    }
 
    err = Overflow;
-   auto n_res = CheckForOverUnderflow(num_, other.num_);
-   auto d_res = CheckForOverUnderflow(denom_, other.denom_);
+   auto n_res = CheckForOverflow(num_, other.num_);
+   auto d_res = CheckForOverflow(denom_, other.denom_);
    if (n_res & Overflow) {
       num_prod = std::numeric_limits<VAL_t>::max();
       denom_prod = denom_;
@@ -541,7 +532,7 @@ template <typename T> constexpr
    VAL_t num_prod = std::numeric_limits<VAL_t>::max();
    ERR_t err = None;
   
-   auto n_res = CheckForOverUnderflow(num_, v);
+   auto n_res = CheckForOverflow(num_, v);
    if (n_res & Overflow) { 
        err = Overflow;
    }
@@ -559,7 +550,7 @@ template <typename T> constexpr
    ERR_t err = None;
   
    auto abs_v = std::abs(v);
-   auto n_res = CheckForOverUnderflow(num_, abs_v);
+   auto n_res = CheckForOverflow(num_, abs_v);
    if (n_res & Overflow) { 
        err = Overflow;
    }
@@ -618,8 +609,6 @@ std::ostream & operator << (std::ostream &out, const Fraction& f) {
    else {
       if (f.err_ & Overflow)
         out << "Overflow! ";
-      if (f.err_ & Underflow)
-        out << "Underflow! ";
       if (f.err_ & NaN)
         out << "NaN! ";
       if (f.err_ & Inf) {
