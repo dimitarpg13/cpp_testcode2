@@ -127,33 +127,33 @@ const Unsigned256 Unsigned256::min_val_ = Unsigned256(0);
 typedef unsigned long long VAL_t;
 typedef int ERR_t;
 
-template <typename T>
+template <typename T> constexpr
 T min_limits(std::false_type is_integral) {
   return T::min_val();
 }
 
-template <typename T>
+template <typename T> constexpr
 T min_limits(std::true_type is_integral) {
   return std::numeric_limits<T>::min();
 }
 
-template <typename T>
+template <typename T> constexpr
 T min_limits() {
   return min_limits<T>(std::is_integral<T>());
 }
 
-template <typename T>
+template <typename T> constexpr
 T max_limits(std::false_type is_integral) {
   return T::max_val(); 
 }
 
-template <typename T>
+template <typename T> constexpr
 T max_limits(std::true_type is_integral) {
   return std::numeric_limits<T>::max();
 }
 
 
-template <typename T> 
+template <typename T> constexpr
 T max_limits() {
   return max_limits<T>(std::is_integral<T>());
 }
