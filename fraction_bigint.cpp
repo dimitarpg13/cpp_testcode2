@@ -27,31 +27,31 @@ public:
    Unsigned256(Unsigned256&& src) = default;
 
    Unsigned256& operator=(const Unsigned256& src) {
-      for (int i = 0; i < 4; i++)
+      for (int i = 0; i < el_count_; i++)
          vals_[i] = src.vals_[i];
 
       return *this;
    }
    Unsigned256& operator*=(const Unsigned256& src) {
-      for (int i = 0; i < 4; i++)
+      for (int i = 0; i < el_count_; i++)
 	 vals_[i] *= src.vals_[i];
 
       return *this;
    }
    Unsigned256& operator/=(const Unsigned256& src) {
-      for (int i = 0; i < 4; i++)
+      for (int i = 0; i < el_count_; i++)
          vals_[i] /= src.vals_[i];
 
       return *this;
    }
    Unsigned256& operator+=(const Unsigned256& src) {
-      for (int i = 0; i < 4; i++)
+      for (int i = 0; i < el_count_; i++)
 	 vals_[i] += src.vals_[i];
 
       return *this;
    }
    Unsigned256& operator-=(const Unsigned256& src) {
-      for (int i = 0; i < 4; i++)
+      for (int i = 0; i < el_count_; i++)
 	 vals_[i] -= src.vals_[i];
 
       return *this;
@@ -100,7 +100,7 @@ public:
       return true;
    }
    bool operator==(const Unsigned256& other) const {
-      for (int i = 0; i < 4; i++)
+      for (int i = 0; i < el_count_; i++)
       {
          if (vals_[i] != other.vals_[i])
 	   return false;
@@ -116,9 +116,10 @@ public:
    static const Unsigned256& max_val();
    static const Unsigned256& min_val(); 
 private:
-   PRIM_t vals_[4];
    static const Unsigned256 max_val_;
    static const Unsigned256 min_val_;
+   static constexpr const int el_count_ = 4;
+   PRIM_t vals_[el_count_];
 };
 
 const Unsigned256 Unsigned256::max_val_ = Unsigned256(-1, -1, -1, -1);
