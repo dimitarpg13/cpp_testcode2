@@ -17,16 +17,30 @@ typedef unsigned long long BUF_t;
 class Unsigned128 {
 public:
    constexpr Unsigned128(PRIM_t iv=0) : vals_{iv, 0, 0, 0} {
-       static_assert( 2 * sizeof (PRIM_t) == sizeof (BUF_t) , "BUF_t is not 2 times the size of PRIM_t");
+       static_assert( std::is_integral<PRIM_t>::value , "PRIM_t is not an integral type" );
+       static_assert( ! std::is_signed<PRIM_t>::value , "PRIM_t is signed integral type" );
+       static_assert( std::is_integral<BUF_t>::value , "BUF_t is not an integral type" );
+       static_assert( ! std::is_signed<BUF_t>::value , "BUF_t is signed integral type" );
+       static_assert( 2 * sizeof (PRIM_t) == sizeof (BUF_t) , "BUF_t is not 2 times the size of PRIM_t" );
    }
 
    constexpr Unsigned128(PRIM_t v1, PRIM_t v2, PRIM_t v3, PRIM_t v4) : vals_{v1, v2, v3, v4} 
    {
+
+       static_assert( std::is_integral<PRIM_t>::value , "PRIM_t is not an integral type" );
+       static_assert( ! std::is_signed<PRIM_t>::value , "PRIM_t is signed integral type" );
+       static_assert( std::is_integral<BUF_t>::value , "BUF_t is not an integral type" );
+       static_assert( ! std::is_signed<BUF_t>::value , "BUF_t is signed integral type" );
        static_assert( 2 * sizeof (PRIM_t) == sizeof (BUF_t) , "BUF_t is not 2 times the size of PRIM_t");
    }
 
    constexpr Unsigned128(const Unsigned128& src) : vals_{src.vals_[0], src.vals_[1], src.vals_[2], src.vals_[3]} 
    {
+
+       static_assert( std::is_integral<PRIM_t>::value , "PRIM_t is not an integral type" );
+       static_assert( ! std::is_signed<PRIM_t>::value , "PRIM_t is signed integral type" );
+       static_assert( std::is_integral<BUF_t>::value , "BUF_t is not an integral type" );
+       static_assert( ! std::is_signed<BUF_t>::value , "BUF_t is signed integral type" );
        static_assert( 2 * sizeof (PRIM_t) == sizeof (BUF_t) , "BUF_t is not 2 times the size of PRIM_t");
    }
    Unsigned128(Unsigned128&& src) = default;
