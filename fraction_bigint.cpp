@@ -12,74 +12,81 @@ enum ErrorCondition {
 };
 
 typedef int SGN_t;
-typedef unsigned long long PRIM_t;
-class Unsigned256 {
+typedef unsigned int PRIM_t;
+typedef unsigned long long BUF_t;
+class Unsigned128 {
 public:
-   constexpr Unsigned256(PRIM_t iv=0) : vals_{iv, 0, 0, 0} {
+   constexpr Unsigned128(PRIM_t iv=0) : vals_{iv, 0, 0, 0} {
+       static_assert( 2 * sizeof (PRIM_t) == sizeof (BUF_t) , "BUF_t is not 2 times the size of PRIM_t");
    }
 
-   constexpr Unsigned256(PRIM_t v1, PRIM_t v2, PRIM_t v3, PRIM_t v4) : vals_{v1, v2, v3, v4} {}
-
-   constexpr Unsigned256(const Unsigned256& src) : vals_{src.vals_[0], src.vals_[1], src.vals_[2], src.vals_[3]} {
+   constexpr Unsigned128(PRIM_t v1, PRIM_t v2, PRIM_t v3, PRIM_t v4) : vals_{v1, v2, v3, v4} 
+   {
+       static_assert( 2 * sizeof (PRIM_t) == sizeof (BUF_t) , "BUF_t is not 2 times the size of PRIM_t");
    }
-   Unsigned256(Unsigned256&& src) = default;
 
-   Unsigned256& operator=(const Unsigned256& src);
+   constexpr Unsigned128(const Unsigned128& src) : vals_{src.vals_[0], src.vals_[1], src.vals_[2], src.vals_[3]} 
+   {
+       static_assert( 2 * sizeof (PRIM_t) == sizeof (BUF_t) , "BUF_t is not 2 times the size of PRIM_t");
+   }
+   Unsigned128(Unsigned128&& src) = default;
 
-   Unsigned256& operator*=(const Unsigned256& src);
+   Unsigned128& operator=(const Unsigned128& src);
+
+   Unsigned128& operator*=(const Unsigned128& src);
   
-   Unsigned256& operator/=(const Unsigned256& src);
+   Unsigned128& operator/=(const Unsigned128& src);
   
-   Unsigned256& operator+=(const Unsigned256& src);
+   Unsigned128& operator+=(const Unsigned128& src);
 
-   Unsigned256& operator-=(const Unsigned256& src);
+   Unsigned128& operator-=(const Unsigned128& src);
 
-   Unsigned256 operator*(const Unsigned256& src) const;
+   Unsigned128 operator*(const Unsigned128& src) const;
 
-   Unsigned256 operator+(const Unsigned256& src) const;
+   Unsigned128 operator+(const Unsigned128& src) const;
 
-   Unsigned256 operator-(const Unsigned256& src) const;
+   Unsigned128 operator-(const Unsigned128& src) const;
   
-   Unsigned256 operator/(const Unsigned256& src) const;
+   Unsigned128 operator/(const Unsigned128& src) const;
 
    template <typename T>
-      Unsigned256 operator*(const T& src) const;
+      Unsigned128 operator*(const T& src) const;
 
    template <typename T>
-      Unsigned256 operator/(const T& src) const;
+      Unsigned128 operator/(const T& src) const;
 
    template <typename T>
-      Unsigned256 operator+(const T& src) const;
+      Unsigned128 operator+(const T& src) const;
 
    template <typename T>
-      Unsigned256 operator-(const T& src) const;
+      Unsigned128 operator-(const T& src) const;
 
-   Unsigned256 operator%(const Unsigned256& src) const;
+   Unsigned128 operator%(const Unsigned128& src) const;
 
-   bool operator>(const Unsigned256& src) const;
+   bool operator>(const Unsigned128& src) const;
 
-   bool operator<(const Unsigned256& ) const;
+   bool operator<(const Unsigned128& ) const;
 
-   bool operator>=(const Unsigned256& ) const;
+   bool operator>=(const Unsigned128& ) const;
 
-   bool operator<=(const Unsigned256& ) const;
+   bool operator<=(const Unsigned128& ) const;
 
-   bool operator==(const Unsigned256& other) const;
+   bool operator==(const Unsigned128& other) const;
 
-   bool operator!=(const Unsigned256& ) const;
+   bool operator!=(const Unsigned128& ) const;
 
-   friend std::ostream & operator << (std::ostream &out, const Unsigned256& );
-   static const Unsigned256& max_val();
-   static const Unsigned256& min_val(); 
+   friend std::ostream & operator << (std::ostream &out, const Unsigned128& );
+   static const Unsigned128& max_val();
+   static const Unsigned128& min_val(); 
 private:
-   static const Unsigned256 max_val_;
-   static const Unsigned256 min_val_;
+   static const Unsigned128 max_val_;
+   static const Unsigned128 min_val_;
    static constexpr int el_count_ = 4;
    PRIM_t vals_[el_count_];
 };
 
-const Unsigned256 Unsigned256::max_val_ = Unsigned256(-1, -1, -1, -1);
-const Unsigned256 Unsigned256::min_val_ = Unsigned256(0);
+const Unsigned128 Unsigned128::max_val_ = Unsigned128(-1, -1, -1, -1);
+const Unsigned128 Unsigned128::min_val_ = Unsigned128(0);
 
 typedef unsigned long long VAL_t;
 typedef int ERR_t;
@@ -142,14 +149,14 @@ template <typename T1, typename T2> inline constexpr
 
 
 
-Unsigned256& Unsigned256::operator=(const Unsigned256& src) {
+Unsigned128& Unsigned128::operator=(const Unsigned128& src) {
    for (int i = 0; i < el_count_; i++)
        vals_[i] = src.vals_[i];
 
    return *this;
 }
 
-Unsigned256& Unsigned256::operator*=(const Unsigned256& src) {
+Unsigned128& Unsigned128::operator*=(const Unsigned128& src) {
    bool val0_overflow=false;
    ERR_t res0 = MultiOverflow(vals_[0], src.vals_[0]);
    if (res0 & Overflow) 
@@ -168,84 +175,84 @@ Unsigned256& Unsigned256::operator*=(const Unsigned256& src) {
    return *this;
 }
 
-Unsigned256& Unsigned256::operator/=(const Unsigned256& src) {
+Unsigned128& Unsigned128::operator/=(const Unsigned128& src) {
     for (int i = 0; i < el_count_; i++)
        vals_[i] /= src.vals_[i];
 
     return *this;
 }
 
-Unsigned256& Unsigned256::operator+=(const Unsigned256& src) {
+Unsigned128& Unsigned128::operator+=(const Unsigned128& src) {
     for (int i = 0; i < el_count_; i++)
        vals_[i] += src.vals_[i];
 
     return *this;
 }
 
-Unsigned256& Unsigned256::operator-=(const Unsigned256& src) {
+Unsigned128& Unsigned128::operator-=(const Unsigned128& src) {
     for (int i = 0; i < el_count_; i++)
        vals_[i] -= src.vals_[i];
 
     return *this;
 }
 
-Unsigned256 Unsigned256::operator*(const Unsigned256& src) const {
-    return Unsigned256(*this)*=src; 
+Unsigned128 Unsigned128::operator*(const Unsigned128& src) const {
+    return Unsigned128(*this)*=src; 
 }
 
-Unsigned256 Unsigned256::operator+(const Unsigned256& src) const {
-    return Unsigned256(*this)+=src;
+Unsigned128 Unsigned128::operator+(const Unsigned128& src) const {
+    return Unsigned128(*this)+=src;
 }
 
-Unsigned256 Unsigned256::operator-(const Unsigned256& src) const {
-    return Unsigned256(*this)-=src;
+Unsigned128 Unsigned128::operator-(const Unsigned128& src) const {
+    return Unsigned128(*this)-=src;
 }
 
-Unsigned256 Unsigned256::operator/(const Unsigned256& src) const {
-    return Unsigned256(*this)/=src;
-}
-
-template <typename T>
-Unsigned256 Unsigned256::operator*(const T& src) const {
-    return Unsigned256(*this)*=src;
+Unsigned128 Unsigned128::operator/(const Unsigned128& src) const {
+    return Unsigned128(*this)/=src;
 }
 
 template <typename T>
-Unsigned256 Unsigned256::operator/(const T& src) const {
-    return Unsigned256(*this)/=src;
+Unsigned128 Unsigned128::operator*(const T& src) const {
+    return Unsigned128(*this)*=src;
 }
 
 template <typename T>
-Unsigned256 Unsigned256::operator+(const T& src) const {
-    return Unsigned256(*this)+=src;
+Unsigned128 Unsigned128::operator/(const T& src) const {
+    return Unsigned128(*this)/=src;
 }
 
 template <typename T>
-Unsigned256 Unsigned256::operator-(const T& src) const {
-    return Unsigned256(*this)-=src;
+Unsigned128 Unsigned128::operator+(const T& src) const {
+    return Unsigned128(*this)+=src;
 }
 
-Unsigned256 Unsigned256::operator%(const Unsigned256& src) const {
-    return Unsigned256(0);
+template <typename T>
+Unsigned128 Unsigned128::operator-(const T& src) const {
+    return Unsigned128(*this)-=src;
 }
 
-bool Unsigned256::operator>(const Unsigned256& src) const {
+Unsigned128 Unsigned128::operator%(const Unsigned128& src) const {
+    return Unsigned128(0);
+}
+
+bool Unsigned128::operator>(const Unsigned128& src) const {
     return true;
 }
 
-bool Unsigned256::operator<(const Unsigned256& ) const {
+bool Unsigned128::operator<(const Unsigned128& ) const {
     return true;
 }
 
-bool Unsigned256::operator>=(const Unsigned256& ) const {
+bool Unsigned128::operator>=(const Unsigned128& ) const {
     return true;
 }
 
-bool Unsigned256::operator<=(const Unsigned256& ) const {
+bool Unsigned128::operator<=(const Unsigned128& ) const {
     return true;
 }
 
-bool Unsigned256::operator==(const Unsigned256& other) const {
+bool Unsigned128::operator==(const Unsigned128& other) const {
     for (int i = 0; i < el_count_; i++)
     {
        if (vals_[i] != other.vals_[i])
@@ -254,7 +261,7 @@ bool Unsigned256::operator==(const Unsigned256& other) const {
     return true;
 }
 
-bool Unsigned256::operator!=(const Unsigned256& ) const {
+bool Unsigned128::operator!=(const Unsigned128& ) const {
       
    return true;
 }
@@ -827,7 +834,8 @@ template <typename T>
 }
 
 
-std::ostream & operator << (std::ostream &out, const Unsigned256& f) {
+std::ostream & operator << (std::ostream &out, const Unsigned128& f) {
+   //TO DO: finish this method
    return out;
 }
 
