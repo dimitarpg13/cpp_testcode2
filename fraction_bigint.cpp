@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <type_traits>
 #include <cstring>
+#include <algorithm>
+#include <vector>
 #include <iostream>
 
 enum ErrorCondition {
@@ -75,34 +77,66 @@ public:
    template <typename T>
       Unsigned128 operator-(const T& src) const;
 
-   Unsigned128 operator%(const Unsigned128& src) const;
+   Unsigned128 operator%(const Unsigned128& quot) const;
 
-   bool operator>(const Unsigned128& src) const;
+   bool operator>(const Unsigned128& other) const;
 
-   bool operator<(const Unsigned128& ) const;
+   bool operator<(const Unsigned128& other) const;
 
-   bool operator>=(const Unsigned128& ) const;
+   bool operator>=(const Unsigned128& other) const;
 
-   bool operator<=(const Unsigned128& ) const;
+   bool operator<=(const Unsigned128& other) const;
 
    bool operator==(const Unsigned128& other) const;
 
-   bool operator!=(const Unsigned128& ) const;
+   bool operator!=(const Unsigned128& other) const;
+   
+   template <typename T>
+       bool operator>(const T& other) const;
+
+   template <typename T>
+       bool operator<(const T& other) const;
+
+   template <typename T>
+       bool operator>=(const T& other) const;
+
+   template <typename T>
+       bool operator<=(const T& other) const;
+
+   template <typename T>
+       bool operator==(const T& other) const;
+
+   template <typename T>
+       bool operator!=(const T& other) const;
 
    friend std::ostream & operator << (std::ostream &out, const Unsigned128& );
-   static const Unsigned128& max_val();
-   static const Unsigned128& min_val(); 
+
+   template <typename T>
+   friend   bool  operator>(const T v, const Unsigned128& f);
+
+   template <typename T>
+   friend   bool  operator<(const T v, const Unsigned128& f);
+
+   template <typename T>
+   friend   bool  operator>=(const T v, const Unsigned128& f);
+
+   template <typename T>
+   friend   bool  operator<=(const T v, const Unsigned128& f);
+
+   static const Unsigned128& max_val() { return max_val_; }
+   static const Unsigned128& min_val() { return min_val_; } 
 private:
    static const Unsigned128 max_val_;
    static const Unsigned128 min_val_;
    static constexpr int el_count_ = 4;
+   static constexpr size_t storage_bits_ = sizeof (PRIM_t) * 8;
    PRIM_t vals_[el_count_];
 };
 
 const Unsigned128 Unsigned128::max_val_ = Unsigned128(-1, -1, -1, -1);
 const Unsigned128 Unsigned128::min_val_ = Unsigned128(0);
 
-typedef unsigned long long VAL_t;
+typedef Unsigned128 VAL_t;
 typedef int ERR_t;
 
 template <typename T> constexpr
@@ -136,6 +170,35 @@ T max_limits() {
 }
 
 
+template <typename T>
+    bool  operator>(const T v, const Unsigned128& f) {
+
+    static_assert(std::is_integral<T>::value, "Integral type required.");
+    return false;
+}
+
+
+template <typename T>
+    bool  operator<(const T v, const Unsigned128& f) {
+    static_assert(std::is_integral<T>::value, "Integral type required.");
+    // TO DO: needs implementation
+    return false;
+}
+
+template <typename T>
+    bool  operator>=(const T v, const Unsigned128& f) {
+    static_assert(std::is_integral<T>::value, "Integral type required.");
+    // TO DO: needs implementation
+    return false;
+}
+
+template <typename T>
+   bool  operator<=(const T v, const Unsigned128& f) {
+    static_assert(std::is_integral<T>::value, "Integral type required.");
+    // TO DO: needs implementation
+    return false;
+}
+
 template <typename T1, typename T2> inline constexpr
    ERR_t MultiOverflow(const T1& a, const T2& b) {
       ERR_t err = None;
@@ -144,10 +207,22 @@ template <typename T1, typename T2> inline constexpr
       if (a > max_lim / b)
          err |= Overflow;
       else if (b > max_lim / a)
-	 err |= Overflow;
+      	 err |= Overflow;
       return err;
  }
 
+
+template <typename T2> inline constexpr
+   ERR_t MultiOverflow(const Unsigned128& a, const T2& b) {
+      ERR_t err = None;
+      auto max_lim = max_limits<Unsigned128>(); 
+
+      if (a > max_lim / b)
+         err |= Overflow;
+      else if (b > max_lim / a)
+      	 err |= Overflow;
+      return err;
+ }
 
 template <typename T1, typename T2> inline constexpr
    ERR_t AddOverflow(const T1& a, const T2& b) {
@@ -157,11 +232,22 @@ template <typename T1, typename T2> inline constexpr
       if (a > max_lim - b)
 	 err |= Overflow;
       else if (b > max_lim - a)
-	 err |= Overflow;
+      	 err |= Overflow;
       return err;
  }
 
 
+template <typename T2> inline constexpr
+   ERR_t AddOverflow(const Unsigned128& a, const T2& b) {
+      ERR_t err = None;
+      auto max_lim = max_limits<Unsigned128>();
+
+      if (a > max_lim - b)
+	 err |= Overflow;
+      else if (b > max_lim - a)
+      	 err |= Overflow;
+      return err;
+ }
 
 Unsigned128& Unsigned128::operator=(const Unsigned128& src) {
    for (int i = 0; i < el_count_; i++)
@@ -170,42 +256,289 @@ Unsigned128& Unsigned128::operator=(const Unsigned128& src) {
    return *this;
 }
 
+// multiplication algorithm for Unsigned128 composed of 4 32bit unsigned ints
+// This algorthm has complexity of O(n^2) where n is the number of elements (el_count_)
+//
+// N -> the max value which can be stored in PRIM_t 
+// N = 2^(sizeof (PRIM_t) * 8) = 2^32
+// a = a0 + a1 * N + a2 * N^2 + a3 * N^3 
+// b = b0 + b1 * N + b2 * N^2 + b3 * N^3
+// a * b = a0 * b0 + 
+//         ( a0 * b1 + a1 * b0 ) * N +
+//         ( a0 * b2 + a1 * b1 + a2 * b0 ) * N^2 +
+//         ( a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0 ) * N^3 +
+//         ( a1 * b3 + a2 * b2 + a3 * b1 ) * N^4 +
+//         ( a2 * b3 + a3 * b2 ) * N^5 +
+//         a3 * b3 * N6
+//
+// Obviously if at least one of the following inequalities is true then
+// we will have Multiplication Overflow :
+// a1 > 0 && b3 > 0
+// a2 > 0 && b2 > 0
+// a3 > 0 && b1 > 0
+// a2 > 0 && b3 > 0
+// a3 > 0 && b2 > 0
+// a3 > 0 && b3 > 0
+//
 Unsigned128& Unsigned128::operator*=(const Unsigned128& src) {
-   bool val0_overflow=false;
-   ERR_t res0 = MultiOverflow(vals_[0], src.vals_[0]);
-   if (res0 & Overflow) 
-     val0_overflow=true;
-   vals_[0] ^= src.vals_[0];
-   bool val1_overflow=false;
-   ERR_t res1;
-   res1 = MultiOverflow(vals_[1], src.vals_[1]);
-   if (res1 & Overflow)
-      val1_overflow=true;
-   else {
-      //auto sum1 = vals
+   bool overflow = false;
+   if (vals_[1] > 0 && src.vals_[1] > 0)
+      overflow = true;
+   else if (vals_[2] > 0 && src.vals_[2] > 0)
+      overflow = true;
+   else if (vals_[3] > 0 && src.vals_[1] > 0)
+      overflow = true;
+   else if (vals_[2] > 0 && src.vals_[3] > 0)
+      overflow = true;
+   else if (vals_[3] > 0 && src.vals_[2] > 0)
+      overflow = true;
+   else if (vals_[3] > 0 && src.vals_[3] > 0)
+      overflow = true;
+
+   if (overflow) {
+      for (int i = 0; i < el_count_; ++i)
+	 vals_[i] = -1;
+      return *this;
    }
-   //TO DO: finish
+
+   BUF_t a0 = (BUF_t) vals_[0];
+   BUF_t a1 = (BUF_t) vals_[1];
+   BUF_t a2 = (BUF_t) vals_[2];
+   BUF_t a3 = (BUF_t) vals_[3];
+
+   BUF_t b0 = (BUF_t) src.vals_[0];
+   BUF_t b1 = (BUF_t) src.vals_[1];
+   BUF_t b2 = (BUF_t) src.vals_[2];
+   BUF_t b3 = (BUF_t) src.vals_[3];
+
+   // a0 * b0 is denoted with subscript 0
+   BUF_t temp0 = a0 * b0; // the term with degree 0 (N^0)
+   PRIM_t test0 = temp0 >> storage_bits_;
+   
+   // a0 * b1 is denoted with subscript 1
+   BUF_t temp1 = a0 * b1; // the first term with degree 1 (N^1)
+
+   // a1 * b0 is denoted with subscript 2
+   BUF_t temp2 = a1 * b0; // the second term with degree 1 (N^1)
+
+   // add the carry-over from term with degree 0
+   if (temp1 < temp2) {
+      if (test0 > 0) {
+          temp1 += test0;
+      }
+   }
+   else {
+      if (test0 > 0) {
+          temp2 += test0;
+      }
+   }
+
+   auto temp_12_sum = temp1 + temp2; // the sum of all terms with degree 1 with the carry-over from degree 0
+   auto test_12_sum = temp_12_sum >> storage_bits_; // the carry-over from the term with degree 0
+
+   std::vector<BUF_t> temp_345;
+   // a0 * b2 is denoted with subscript 3
+   temp_345.push_back(a0 * b2);
+
+   // a1 * b1 is denoted with subscript 4
+   temp_345.push_back(a1 * b1);
+
+   // a2 * b0 is denoted with subscript 5
+   temp_345.push_back(a2 * b0);
+
+   int min_idx =  0; // always add the carry-over from the terms with degree I-1 to the first term with degree I 
+
+   // add carry-over from terms with degree 1
+   if (test_12_sum > 0)
+   {
+      temp_345[min_idx] += test_12_sum;
+   } 
+
+   BUF_t temp_345_sum = 0; // the sum of all terms with degree 2 with the carry-over from degree 1
+   BUF_t test_345_sum = 0; // carry-over for all terms with degree 2
+   for (int i = 0; i < 3; i++) {
+      temp_345_sum += temp_345[i];
+   }
+   test_345_sum = temp_345_sum >> storage_bits_;
+
+   std::vector<BUF_t> temp_6789;
+   std::vector<PRIM_t> test_6789;
+   // a0 * b3 is denoted with subscript 6
+   overflow=false;
+   ERR_t res = MultiOverflow(vals_[0], src.vals_[3]);
+   if ( ! (res & Overflow) ) {
+      temp_6789.push_back(a0 * b3);
+      test_6789.push_back ( temp_6789.back() >> storage_bits_ );
+   } else
+	overflow = true;
+
+   if (!overflow) {
+      // a1 * b2 is denoted with subscript 7
+      res = MultiOverflow(vals_[1], src.vals_[2]);
+      if ( ! (res & Overflow) ) {
+         temp_6789.push_back(a1 * b2);
+         test_6789.push_back ( temp_6789.back() >> storage_bits_ );
+      } else
+   	 overflow = true;
+   }
+
+   if (!overflow) {
+       // a2 * b1 is denoted with subscript 8
+       res = MultiOverflow(vals_[2], src.vals_[1]);
+       if ( ! (res & Overflow) ) {
+          temp_6789.push_back(a2 * b1);
+          test_6789.push_back ( temp_6789.back() >> storage_bits_ );
+       } else
+           overflow = true;
+   }
+
+   if (!overflow) {
+       // a3 * b0 is denoted with subscript 9
+       res = MultiOverflow(vals_[3], src.vals_[0]);
+       if ( ! (res & Overflow) ) {
+          temp_6789.push_back(a3 * b0);
+          test_6789.push_back ( temp_6789.back() >> storage_bits_ );
+       } else
+           overflow = true;
+   }
+
+   if (overflow) {
+      for (int i = 0; i < el_count_; ++i)
+	 vals_[i] = -1;
+      return *this;
+   }
+
+   // add carry-over from terms with degree 2 
+   if (test_345_sum > 0)
+   {
+      temp_6789[min_idx] += test_345_sum;
+      test_6789[min_idx] = temp_6789[min_idx] >> storage_bits_; 
+   } 
+
+   for (int i=0; i < 4; i++) {
+      if (test_6789[i] > 0) {
+         overflow = true;
+	 break;
+      }
+   }
+
+   if (overflow) {
+      for (int i = 0; i < el_count_; ++i)
+	 vals_[i] = -1;
+      return *this;
+   }
+      
+   BUF_t temp_6789_sum = 0; // the sum of all terms with degree 3 with the carry-over from degree 2
+   BUF_t test_6789_sum = 0; // carry-over for all terms with degree 3
+   for (int i = 0; i < 3; i++) {
+      temp_6789_sum += temp_6789[i];
+   }
+   test_6789_sum = temp_6789_sum >> storage_bits_;
+   overflow = test_6789_sum > 0 ? true : false;
+   if (overflow) {
+      for (int i = 0; i < el_count_; ++i)
+	 vals_[i] = -1;
+      return *this;
+   }
+
+   vals_[0] = (PRIM_t) temp0; // get the lower 32 bits for the sum of all terms with degree 0
+   vals_[1] = (PRIM_t) temp_12_sum ; // get the lower 32 bits for the sum of all terms with degree 1
+   vals_[2] = (PRIM_t) temp_345_sum;  // get the lower 32 bits for the sum of all terms with degree 2
+   vals_[3] = (PRIM_t) temp_6789_sum; // get the lower 32 bits for the sum of all terms with degree 3
+    
 
    return *this;
 }
 
+
+
+// division algorithm for Unsigned128 composed of 4 32bit unsigned ints
+//
+// N -> the max value which can be stored in PRIM_t 
+// N = 2^(sizeof (PRIM_t) * 8) = 2^32
+// a = a_0 + a_1 * N + a_2 * N^2 + a_3 * N^3 
+// b = b_0 + b_1 * N + b_2 * N^2 + b_3 * N^3
+//
+// Discussion:
+// Let us denote with a_k, k = 0..3 the highest positive coefficient for a
+// Let us denote with b_m, m = 0..3 the highest positive coefficient for b
+// Obviously m <= k
+// Let us denote with A the following subterm in a:
+//   A  = a_k * N^k + a_{k-1} * N^{k-1} + .. + a_m * N^m
+// Let is denote with B the following subterm in b:
+//   B = b_m * N^m
+// Let Q = A / B = a_k / b_m * N^{k-m} + a_{k-1} / b_m * N^{k-m-1} + .. + a_m / b_m
+// Let us compute A - B * Q+ :
+// if ( B > A - B * Q > 0 ) then the desired quotient is Q
+// the remainder R is A - B * Q
+//
 Unsigned128& Unsigned128::operator/=(const Unsigned128& src) {
-    for (int i = 0; i < el_count_; i++)
-       vals_[i] /= src.vals_[i];
-
+    // TO DO: needs implementation
     return *this;
 }
 
+
+// division algorithm for Unsigned128 composed of 4 32bit unsigned ints
+// for description see the previous method
+Unsigned128 Unsigned128::operator%(const Unsigned128& src) const {
+    // TO DO: needs implementation
+    return Unsigned128(0);
+}
+
+// addition algorithm for Unsigned128 composed of 4 32bit unsigned ints
+// This algorthm has complexity of O(n) where n is the number of elements (el_count_)
+//
 Unsigned128& Unsigned128::operator+=(const Unsigned128& src) {
+    BUF_t temp_cur = 0;
+    PRIM_t test_cur = 0, test_prev = 0;
     for (int i = 0; i < el_count_; i++)
-       vals_[i] += src.vals_[i];
+    {
+
+       temp_cur = (BUF_t) vals_[i];
+       temp_cur += (BUF_t) src.vals_[i];
+       if (test_prev > 0)
+       {
+	  temp_cur += (PRIM_t) test_prev;
+       }
+       test_cur = temp_cur >> storage_bits_;
+
+       vals_[i] = (PRIM_t) temp_cur;
+       if (test_cur > 0) {
+          test_prev = test_cur;
+       }
+       else {
+          test_prev = 0;
+       }
+    }
 
     return *this;
 }
 
+// subtraction algorithm for Unsigned128 composed of 4 32bit unsigned ints
+// This algorthm has complexity of O(n) where n is the number of elements (el_count_)
+//
 Unsigned128& Unsigned128::operator-=(const Unsigned128& src) {
+    bool borrow=false;
+    BUF_t temp = 0;
     for (int i = 0; i < el_count_; i++)
-       vals_[i] -= src.vals_[i];
+    {
+       if (borrow)
+	  vals_[i]--;
+
+       if ( vals_[i] > src.vals_[i] )
+       {
+          vals_[i] -= src.vals_[i];
+          borrow=false;
+       }
+       else
+       {
+	   temp = vals_[i];
+	   temp += ((BUF_t) 1 << storage_bits_);
+	   temp -= src.vals_[i];
+	   vals_[i] = (PRIM_t) temp; 
+           borrow=true;
+       }
+    }
 
     return *this;
 }
@@ -246,23 +579,60 @@ Unsigned128 Unsigned128::operator-(const T& src) const {
     return Unsigned128(*this)-=src;
 }
 
-Unsigned128 Unsigned128::operator%(const Unsigned128& src) const {
-    return Unsigned128(0);
-}
-
-bool Unsigned128::operator>(const Unsigned128& src) const {
+bool Unsigned128::operator>(const Unsigned128& other) const {
+    // TO DO: needs implementation
     return true;
 }
 
-bool Unsigned128::operator<(const Unsigned128& ) const {
+bool Unsigned128::operator<(const Unsigned128& other) const {
+    // TO DO: needs implementation
     return true;
 }
 
-bool Unsigned128::operator>=(const Unsigned128& ) const {
+bool Unsigned128::operator>=(const Unsigned128& other) const {
+    // TO DO: needs implementation
     return true;
 }
 
-bool Unsigned128::operator<=(const Unsigned128& ) const {
+bool Unsigned128::operator<=(const Unsigned128& other) const {
+    // TO DO: needs implementation
+    return true;
+}
+
+
+template <typename T>
+   bool Unsigned128::operator>(const T& other) const {
+    // TO DO: needs implementation
+    return true;
+}
+
+template <typename T>
+   bool Unsigned128::operator<(const T& other) const {
+    // TO DO: needs implementation
+    return false;
+}
+
+template <typename T>
+   bool Unsigned128::operator>=(const T& other) const {
+    // TO DO: needs implementation
+    return true;
+}
+
+template <typename T>
+   bool Unsigned128::operator<=(const T& other) const {
+    // TO DO: needs implementation
+    return false;
+}
+
+template <typename T>
+   bool Unsigned128::operator==(const T& other) const {
+    // TO DO: needs implementation
+    return false;
+}
+
+template <typename T>
+   bool Unsigned128::operator!=(const T& other) const {
+    // TO DO: needs implementation
     return true;
 }
 
@@ -276,7 +646,7 @@ bool Unsigned128::operator==(const Unsigned128& other) const {
 }
 
 bool Unsigned128::operator!=(const Unsigned128& ) const {
-      
+    // TO DO: needs implementation
    return true;
 }
 
