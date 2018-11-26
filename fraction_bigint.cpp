@@ -659,22 +659,38 @@ Unsigned128 Unsigned128::operator-(const T& src) const {
 }
 
 bool Unsigned128::operator>(const Unsigned128& other) const {
-    // TO DO: needs implementation
-    return true;
+    for (int i = el_count_ - 1; i >= 0; i--) {
+       if (vals_[i] > other.vals_[i])
+	       return true;
+    }
+    return false;
 }
 
 bool Unsigned128::operator<(const Unsigned128& other) const {
-    // TO DO: needs implementation
-    return true;
+    for (int i = el_count_ - 1; i >= 0; i--) {
+       if (vals_[i] < other.vals_[i])
+	       return true;
+    }
+    return false;
 }
 
 bool Unsigned128::operator>=(const Unsigned128& other) const {
-    // TO DO: needs implementation
+    for (int i = el_count_ - 1; i >= 0; i--) {
+       if (vals_[i] > other.vals_[i])
+	       return true;
+       if (vals_[i] < other.vals_[i])
+	       return false;
+    }
     return true;
 }
 
 bool Unsigned128::operator<=(const Unsigned128& other) const {
-    // TO DO: needs implementation
+    for (int i = el_count_ - 1; i >= 0; i--) {
+       if (vals_[i] < other.vals_[i])
+	       return true;
+       if (vals_[i] > other.vals_[i])
+	       return false;
+    }
     return true;
 }
 
@@ -682,7 +698,7 @@ bool Unsigned128::operator<=(const Unsigned128& other) const {
 template <typename T>
    bool Unsigned128::operator>(const T& other) const {
     // TO DO: needs implementation
-    return true;
+    return false;
 }
 
 template <typename T>
