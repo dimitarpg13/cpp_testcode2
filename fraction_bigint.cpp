@@ -453,13 +453,14 @@ Unsigned128& Unsigned128::operator*=(const Unsigned128& src) {
 
 
 // division algorithm for Unsigned128 composed of 4 32bit unsigned ints
+// This algorthm has complexity of O(n) where n is the number of elements (el_count_)
 //
 // N -> the max value which can be stored in PRIM_t 
 // N = 2^(sizeof (PRIM_t) * 8) = 2^32
 // a = a_0 + a_1 * N + a_2 * N^2 + a_3 * N^3 
 // b = b_0 + b_1 * N + b_2 * N^2 + b_3 * N^3
 //
-// Discussion:
+// the algorithm:
 // Let us denote with a_k, k = 0..3 the highest positive coefficient for a
 // Let us denote with b_m, m = 0..3 the highest positive coefficient for b
 // Obviously m <= k
@@ -468,21 +469,99 @@ Unsigned128& Unsigned128::operator*=(const Unsigned128& src) {
 // Let is denote with B the following subterm in b:
 //   B = b_m * N^m
 // Let Q = A / B = a_k / b_m * N^{k-m} + a_{k-1} / b_m * N^{k-m-1} + .. + a_m / b_m
-// Let us compute A - B * Q+ :
+// Let us compute A - B * Q :
 // if ( B > A - B * Q > 0 ) then the desired quotient is Q
 // the remainder R is A - B * Q
 //
 Unsigned128& Unsigned128::operator/=(const Unsigned128& src) {
-    // TO DO: needs implementation
+    // compute k and m
+    int k = el_count_; 
+    int m = el_count_; 
+    for (int i=el_count_-1; i>=0; i++) {
+       if (vals_[i] > 0) {
+          k = i;
+	  break;
+       }       
+    }
+
+    for (int i=el_count_-1; i>=0; i++) {
+       if (src.vals_[i] > 0) {
+          m = i;
+	  break;
+       }
+    }
+    if (m > k)
+    {
+       for (int i = 0; i < el_count_; i++)
+	  vals_[i]=0;
+       return *this;
+    }
+
+    // compute Q
+    Unsigned128 Q; 
+    PRIM_t b_m = src.vals_[m]; 
+    PRIM_t a_k = vals_[k];
+    if (k > m) {
+       PRIM_t a_k_minus_1 = vals_[k-1];
+       if (k - 1 > m) {
+           PRIM_t a_k_minus_2 = vals_[k-2];
+           if (k - 2 > m) {
+               PRIM_t a_k_minus_3 = vals_[k-3];
+               Q.vals_[k-m-3] = a_k_minus_3 / b_m;
+	   }
+           Q.vals_[k-m-2] = a_k_minus_2 / b_m;
+       }
+       Q.vals_[k-m-1] = a_k_minus_1 / b_m;
+    }
+    Q.vals_[k-m] = a_k / b_m;
+    *this=Q;
     return *this;
 }
 
 
 // division algorithm for Unsigned128 composed of 4 32bit unsigned ints
-// for description see the previous method
+// Note: for description see the previous method for division into (operator/=)
 Unsigned128 Unsigned128::operator%(const Unsigned128& src) const {
-    // TO DO: needs implementation
-    return Unsigned128(0);
+    // compute k and m
+    int k = el_count_; 
+    int m = el_count_; 
+    for (int i=el_count_-1; i>=0; i++) {
+       if (vals_[i] > 0) {
+          k = i;
+	  break;
+       }       
+    }
+
+    for (int i=el_count_-1; i>=0; i++) {
+       if (src.vals_[i] > 0) {
+          m = i;
+	  break;
+       }
+    }
+    if (m > k)
+    {
+       return Unsigned128(0);
+    }
+
+    // compute Q
+    Unsigned128 Q; 
+    PRIM_t b_m = src.vals_[m]; 
+    PRIM_t a_k = vals_[k];
+    if (k > m) {
+       PRIM_t a_k_minus_1 = vals_[k-1];
+       if (k - 1 > m) {
+           PRIM_t a_k_minus_2 = vals_[k-2];
+           if (k - 2 > m) {
+               PRIM_t a_k_minus_3 = vals_[k-3];
+               Q.vals_[k-m-3] = a_k_minus_3 / b_m;
+	   }
+           Q.vals_[k-m-2] = a_k_minus_2 / b_m;
+       }
+       Q.vals_[k-m-1] = a_k_minus_1 / b_m;
+    }
+    Q.vals_[k-m] = a_k / b_m;
+    Unsigned128 R = Unsigned128(*this) - src * Q;
+    return R;
 }
 
 // addition algorithm for Unsigned128 composed of 4 32bit unsigned ints
