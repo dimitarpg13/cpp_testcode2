@@ -723,6 +723,12 @@ int main(int argc, char * argv[]) {
    for (int i = 0; i < numThreads; i++) {
       myThreads[i].join();
    }
+
+   std::cout << "Showing the fractions after all threads have completed. Press Enter to start.." << std::endl;
+   std::getline(std::cin, dummy);
+   for (int i = 0; i < numFractions; i++)
+       std::cout << *vect[i] << std::endl;	   
+
    return 0;
 
 }
