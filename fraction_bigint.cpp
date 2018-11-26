@@ -364,49 +364,21 @@ Unsigned128& Unsigned128::operator*=(const Unsigned128& src) {
    std::vector<BUF_t> temp_6789;
    std::vector<PRIM_t> test_6789;
    // a0 * b3 is denoted with subscript 6
-   overflow=false;
-   ERR_t res = MultiOverflow(vals_[0], src.vals_[3]);
-   if ( ! (res & Overflow) ) {
-      temp_6789.push_back(a0 * b3);
-      test_6789.push_back ( temp_6789.back() >> storage_bits_ );
-   } else
-	overflow = true;
+   temp_6789.push_back(a0 * b3);
+   test_6789.push_back ( temp_6789.back() >> storage_bits_ );
 
-   if (!overflow) {
-      // a1 * b2 is denoted with subscript 7
-      res = MultiOverflow(vals_[1], src.vals_[2]);
-      if ( ! (res & Overflow) ) {
-         temp_6789.push_back(a1 * b2);
-         test_6789.push_back ( temp_6789.back() >> storage_bits_ );
-      } else
-   	 overflow = true;
-   }
+   // a1 * b2 is denoted with subscript 7
+   temp_6789.push_back(a1 * b2);
+   test_6789.push_back ( temp_6789.back() >> storage_bits_ );
 
-   if (!overflow) {
-       // a2 * b1 is denoted with subscript 8
-       res = MultiOverflow(vals_[2], src.vals_[1]);
-       if ( ! (res & Overflow) ) {
-          temp_6789.push_back(a2 * b1);
-          test_6789.push_back ( temp_6789.back() >> storage_bits_ );
-       } else
-           overflow = true;
-   }
+   // a2 * b1 is denoted with subscript 8
+   temp_6789.push_back(a2 * b1);
+   test_6789.push_back ( temp_6789.back() >> storage_bits_ );
 
-   if (!overflow) {
-       // a3 * b0 is denoted with subscript 9
-       res = MultiOverflow(vals_[3], src.vals_[0]);
-       if ( ! (res & Overflow) ) {
-          temp_6789.push_back(a3 * b0);
-          test_6789.push_back ( temp_6789.back() >> storage_bits_ );
-       } else
-           overflow = true;
-   }
+   // a3 * b0 is denoted with subscript 9
+   temp_6789.push_back(a3 * b0);
+   test_6789.push_back ( temp_6789.back() >> storage_bits_ );
 
-   if (overflow) {
-      for (int i = 0; i < el_count_; ++i)
-	 vals_[i] = -1;
-      return *this;
-   }
 
    // add carry-over from terms with degree 2 
    if (test_345_sum > 0)
