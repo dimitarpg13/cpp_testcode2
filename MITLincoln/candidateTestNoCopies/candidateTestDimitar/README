@@ -1,9 +1,0 @@
-Version 1.2
-
-Instructions
- Compiling the package requires gcc 4.7 or newer.
- See /doc folder for problem statement.
-
-Release Notes
-- Using real float values for the unit tests
-- Rolled all unit tests source files in the ut-lib.a library
