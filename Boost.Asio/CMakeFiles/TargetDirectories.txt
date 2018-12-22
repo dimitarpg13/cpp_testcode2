@@ -1,0 +1,3 @@
+/opt/testcode/Boost.Asio/CMakeFiles/rebuild_cache.dir
+/opt/testcode/Boost.Asio/CMakeFiles/myprog.dir
+/opt/testcode/Boost.Asio/CMakeFiles/edit_cache.dir
