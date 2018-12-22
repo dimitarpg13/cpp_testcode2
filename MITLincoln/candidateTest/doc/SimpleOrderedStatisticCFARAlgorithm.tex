@@ -1,0 +1,51 @@
+\documentclass{article}
+
+\usepackage[margin=0.75in,bottom=1in, top=0.5in]{geometry}
+\usepackage{amsmath}
+\usepackage{parskip}
+
+\setlength{\parindent}{1cm}
+
+\title{Simple Ordered Statistic CFAR Algorithm}
+\author{MIT LL Group 102}
+\begin{document}
+
+\maketitle
+
+\begin{flushleft}
+Consider the following input:
+
+\begin{itemize}
+  \item A mask, $M(k,l)$, for selecting elements from an array, where $k$ and $l$ are positive integers, and $M$ is defined as an array of Boolean values represented as $0$ and $1:M=\{s_{1}, ..., s_{k}, t_{2l-1}, s_{1}, ..., s_{k}\}$, where $s_{i}=1$ for any $i$ from $1$ to $k$ and $t_{j}=0$ for any $j$ from $1$ to $2l-1$. \par For example, $M(2,1)=\{1,1,0,1,1\},\ M(3,2)=\{1,1,1,0,0,0,1,1,1\}$
+  \item An array $A$ of $n$ numeric values: $A=\{a_{1}, ..., a_{n}\}$
+  \item A real value $p$ between $0$ and $1$  
+\end{itemize}
+
+The output of the algorithm is an array $B$ with the same size as $A$ and containing a subset (with repetitions allowed) of the original array $A$. The algorithm is described as follows: \par \end{flushleft}
+
+\hangindent=1cm The mask is applied successively, centered on each element of the input array, $A$, in order to select the elements corresponding to the 1s. If elements could not be selected due to boundary conditions (i.e., where the mask $M$ runs off the edges of $A$ or does not cover certain elements of $A$, in other words, does not fully overlap $A$) they will be ignored. \par
+
+\begin{flushleft}
+More formally, if $a_{i}$ is an element of $A$, the set of selected elements will be: \[ S_{i}=\big\{a_{m}\mid i>l,\ m\geq \text{max}(1, i-l-k+1),\ m\leq i-l\big\} \cup \big\{a_{m}\mid i\leq n-l,\ m\geq i+l,\ m\leq \text{min}(n, i+l+k-1)\big\} \] \par
+
+For instance, assume:\[ A=\{a_{1}, a_{2}, a_{3}, a_{4}, a_{5}\},\ M(2,1)=\{1,1,0,1,1\}, \text{ and } p=\frac{3}{4} \]
+With these inputs, the algorithm proceeds as follows:
+\begin{enumerate}
+  \item For each element $a_{i}$ to which the mask is applied, the following subsets of elements are selected:
+  \begin{itemize}
+    \item[\textendash] $a_{1}:S_{1}=\{s_{1,1},s_{1,2}\}=\{a_{2},a_{3}\}$
+    \item[\textendash] $a_{2}:S_{2}=\{s_{2,1},s_{2,2},s_{2,3}\}=\{a_{1},a_{3},a_{4}\}$
+    \item[\textendash] $a_{3}:S_{3}=\{s_{3,1},s_{3,2},s_{3,3},s_{3,4}\}=\{a_{1},a_{2},a_{4},a_{5}\}$
+    \item[\textendash] $a_{4}:S_{4}=\{s_{4,1},s_{4,2},s_{4,3}\}=\{a_{2},a_{3},a_{5}\}$
+    \item[\textendash] $a_{5}:S_{5}=\{s_{5,1},s_{5,2}\}=\{a_{3},a_{4}\}$
+  \end{itemize}
+  \item For each of these selected sets, $S_{i}$, where $i=\{1, ...,n\}$, choose the element $s_{i,j}$ such that $\lfloor p*\text{length}(S_{i})\rfloor$ elements from the set are no greater than $s_{i,j}$, and the rest are no less than $s_{i,j}$.
+  \item Set element $B_{i}$ in output array $B$ equal to the chosen $s_{i,j}$. 
+\end{enumerate}  
+For example, assume that the elements in array $A$ are sorted in increasing order. The output of the algorithm is then array $B=\{a_{2},a_{3},a_{4},a_{3},a_{3}\}$.
+
+\textbf{Task: }Devise an efficient implementation of the algorithm and populate the \texttt{run()} method within the provided software package. The software package will verify the correct implementation using known input and output pairs. \emph{Hint: copying memory is expensive, as is sorting.}
+
+\end{flushleft}
+
+\end{document}
