@@ -1,5 +1,6 @@
-SET(PROGNAME myprog)
+cmake_minimum_required(VERSION 3.10)
 
+SET(ASYNC_TIMER async_timer)
 option(USE_CLANG "build application with clang" ON)
 
 if(USE_CLANG)
@@ -20,10 +21,10 @@ endif(USE_CLANG)
 set(Boost_USE_STATIC_LIBS ON) 
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME ON) 
-find_package(Boost 1.65.1 COMPONENTS date_time regex thread serialization system log log_setup program_options graph REQUIRED) 
+find_package(Boost 1.69 COMPONENTS date_time regex thread serialization system log log_setup program_options graph REQUIRED) 
 
 if(Boost_FOUND)
    include_directories(${Boost_INCLUDE_DIRS}) 
-   add_executable(${PROGNAME} main.cpp) 
-   target_link_libraries(${PROGNAME} ${Boost_LIBRARIES})
+   add_executable(${ASYNC_TIMER} async_timer_main.cpp) 
+   target_link_libraries(${ASYNC_TIMER} ${Boost_LIBRARIES})
 endif()
