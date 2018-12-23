@@ -2,16 +2,11 @@
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-void print(const boost::system::error_code& /*e*/)
-{
-   std::cout << "Hello, world from timer callback!" << std::endl;
-}
-
 int main (int argc, char* argv[]) {
     boost::asio::io_service io;
     boost::asio::deadline_timer t(io, boost::posix_time::seconds(5));
-    t.async_wait(&print);
+    t.wait();
     io.run();
-    std::cout << "Hello, world!" << std::endl;
+    std::cout << "Hello world!" << std::endl; 
     return 0;
 }

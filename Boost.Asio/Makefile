@@ -111,6 +111,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named sync_timer
+
+# Build rule for target.
+sync_timer: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 sync_timer
+.PHONY : sync_timer
+
+# fast build rule for target.
+sync_timer/fast:
+	$(MAKE) -f CMakeFiles/sync_timer.dir/build.make CMakeFiles/sync_timer.dir/build
+.PHONY : sync_timer/fast
+
+#=============================================================================
 # Target rules for targets named async_timer
 
 # Build rule for target.
@@ -150,6 +163,33 @@ async_timer_main.cpp.s:
 	$(MAKE) -f CMakeFiles/async_timer.dir/build.make CMakeFiles/async_timer.dir/async_timer_main.cpp.s
 .PHONY : async_timer_main.cpp.s
 
+sync_timer_main.o: sync_timer_main.cpp.o
+
+.PHONY : sync_timer_main.o
+
+# target to build an object file
+sync_timer_main.cpp.o:
+	$(MAKE) -f CMakeFiles/sync_timer.dir/build.make CMakeFiles/sync_timer.dir/sync_timer_main.cpp.o
+.PHONY : sync_timer_main.cpp.o
+
+sync_timer_main.i: sync_timer_main.cpp.i
+
+.PHONY : sync_timer_main.i
+
+# target to preprocess a source file
+sync_timer_main.cpp.i:
+	$(MAKE) -f CMakeFiles/sync_timer.dir/build.make CMakeFiles/sync_timer.dir/sync_timer_main.cpp.i
+.PHONY : sync_timer_main.cpp.i
+
+sync_timer_main.s: sync_timer_main.cpp.s
+
+.PHONY : sync_timer_main.s
+
+# target to generate assembly for a file
+sync_timer_main.cpp.s:
+	$(MAKE) -f CMakeFiles/sync_timer.dir/build.make CMakeFiles/sync_timer.dir/sync_timer_main.cpp.s
+.PHONY : sync_timer_main.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -157,11 +197,15 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
-	@echo "... async_timer"
 	@echo "... edit_cache"
+	@echo "... sync_timer"
+	@echo "... async_timer"
 	@echo "... async_timer_main.o"
 	@echo "... async_timer_main.i"
 	@echo "... async_timer_main.s"
+	@echo "... sync_timer_main.o"
+	@echo "... sync_timer_main.i"
+	@echo "... sync_timer_main.s"
 .PHONY : help
 
 

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
-SET(ASYNC_TIMER async_timer)
+SET(SYNC_TIMER_EXE sync_timer)
+SET(ASYNC_TIMER_EXE async_timer)
 option(USE_CLANG "build application with clang" ON)
 
 if(USE_CLANG)
@@ -25,6 +26,8 @@ find_package(Boost 1.69 COMPONENTS date_time regex thread serialization system l
 
 if(Boost_FOUND)
    include_directories(${Boost_INCLUDE_DIRS}) 
-   add_executable(${ASYNC_TIMER} async_timer_main.cpp) 
-   target_link_libraries(${ASYNC_TIMER} ${Boost_LIBRARIES})
+   add_executable(${SYNC_TIMER_EXE} sync_timer_main.cpp)
+   add_executable(${ASYNC_TIMER_EXE} async_timer_main.cpp) 
+   target_link_libraries(${SYNC_TIMER_EXE} ${Boost_LIBRARIES})
+   target_link_libraries(${ASYNC_TIMER_EXE} ${Boost_LIBRARIES})
 endif()
