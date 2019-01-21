@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 SET(SYNC_TIMER_EXE sync_timer)
 SET(ASYNC_TIMER_EXE async_timer)
+SET(ASYNC_TIMER2_EXE async_timer2)
+
 option(USE_CLANG "build application with clang" ON)
 
 if(USE_CLANG)
@@ -28,6 +30,8 @@ if(Boost_FOUND)
    include_directories(${Boost_INCLUDE_DIRS}) 
    add_executable(${SYNC_TIMER_EXE} sync_timer_main.cpp)
    add_executable(${ASYNC_TIMER_EXE} async_timer_main.cpp) 
+   add_executable(${ASYNC_TIMER2_EXE} async_timer_bind_main.cpp)
    target_link_libraries(${SYNC_TIMER_EXE} ${Boost_LIBRARIES})
    target_link_libraries(${ASYNC_TIMER_EXE} ${Boost_LIBRARIES})
+   target_link_libraries(${ASYNC_TIMER2_EXE} ${Boost_LIBRARIES})
 endif()
