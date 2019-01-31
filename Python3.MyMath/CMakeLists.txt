@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(mymodule)
+project(mymath)
 
 macro (add_sources)
     file (RELATIVE_PATH _relPath "${PROJECT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -54,15 +54,15 @@ if(NUMPY_NOT_FOUND)
     message(FATAL_ERROR "NumPy headers not found")
 endif()
 
-add_sources(mymodule.cc)
+add_sources(mymath.cc)
 
-add_library(mymodule SHARED ${SRCS})
+add_library(mymath SHARED ${SRCS})
 
 set_target_properties(
-    mymodule
+    mymath
     PROPERTIES
         PREFIX ""
-        OUTPUT_NAME "mymodule"
+        OUTPUT_NAME "mymath"
         LINKER_LANGUAGE C
     )
 
