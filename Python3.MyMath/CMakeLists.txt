@@ -39,10 +39,12 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON) 
 find_package(Boost 1.69 COMPONENTS date_time regex thread serialization system log log_setup program_options graph REQUIRED) 
 
-find_package(PythonInterp 3.5 REQUIRED)
+find_package(PythonInterp 3.6 REQUIRED)
 
 # this goes after since it uses PythonInterp as hint
-find_package(PythonLibs 3.5 REQUIRED)
+find_package(PythonLibs 3.6 REQUIRED)
+
+include_directories(${PYTHON_INCLUDE_DIRS})
 
 # this comes to hand if we also need to use the NumPy C API
 exec_program(${PYTHON_EXECUTABLE}
@@ -57,6 +59,8 @@ endif()
 add_sources(mymath.cc)
 
 add_library(mymath SHARED ${SRCS})
+
+target_link_libraries(mymath ${PYTHON_LIBRARIES})
 
 set_target_properties(
     mymath
