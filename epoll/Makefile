@@ -7,7 +7,7 @@ epoll_sample: epoll_sample.c
 	gcc -Wall -Werror -o $@ epoll_sample.c
 
 simple_tcp_server: simple_tcp_server.c
-	gcc -Wall -o $@ simple_tcp_server.c
+	gcc -Wall -Werror -o $@ simple_tcp_server.c
 
 clean:
 	@rm -v epoll_example
