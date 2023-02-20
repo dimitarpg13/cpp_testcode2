@@ -1,3 +1,8 @@
+//
+// Compile with:
+//   clang++ -std=c++14 -g -O0 fraction.cpp 
+//
+
 #include <limits>
 #include <cstdlib>
 #include <type_traits>
@@ -15,7 +20,11 @@ typedef int SGN_t;
 typedef int ERR_t;
 
 class Fraction {
-
+// C++ class that represents a fraction, for example 2/7.
+// Implements the ability to do the following:
+// Multiply two Fraction objects. For ex., F1*F2
+// Multiply a Fraction object by an integer.  For ex. F1*3
+// Multiply an integer by a Fraction object.  For ex.  3*F1
 public:
 
    Fraction(const Fraction& ) = default;
