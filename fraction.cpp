@@ -21,6 +21,7 @@ typedef int ERR_t;
 
 class Fraction {
 // C++ class that represents a fraction, for example 2/7.
+// Naive implementation
 // Implements the ability to do the following:
 // Multiply two Fraction objects. For ex., F1*F2
 // Multiply a Fraction object by an integer.  For ex. F1*3
