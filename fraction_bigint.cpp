@@ -1,3 +1,7 @@
+//
+// Compile with:
+//   clang++ -std=c++14 -g -O0 fraction_bigint.cpp
+// 
 #include <limits>
 #include <cstdlib>
 #include <type_traits>
@@ -5,6 +9,20 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+
+// a C++ class Fraction that represents a fraction, for example 2/7.
+// Big-int implementation.
+// Implements the ability to do the following:
+// Multiply two Fraction objects. For ex., F1*F2
+// Multiply a Fraction object by an integer.  For ex. F1*3
+// Multiply an integer by a Fraction object.  For ex.  3*F1
+// The Fraction class is implemented with custom arbitrary large BigInt container
+// instead of using the built-in types - e.g.: unsigned long. 
+// Note that this is not finished work and it should simply serve as an illustration
+// of the challenges and the possible (and naive) approach which I took.  
+// The point of this work is to show that the Fraction class can be designed with modularity
+// in mind so one can easily to plug custom storage containers with a single line of change
+// in the class Fraction. 
 
 enum ErrorCondition {
   None=0,
@@ -719,7 +737,12 @@ bool Unsigned128::operator!=(const Unsigned128& ) const {
 
 
 class Fraction {
-
+// C++ class that represents a fraction, for example 2/7.
+// Big-int implementation.
+// Implements the ability to do the following:
+// Multiply two Fraction objects. For ex., F1*F2
+// Multiply a Fraction object by an integer.  For ex. F1*3
+// Multiply an integer by a Fraction object.  For ex.  3*F1
 public:
 
    Fraction(const Fraction& ) = default;
